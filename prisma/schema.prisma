@@ -19,7 +19,7 @@ model User {
   Session    Session[]
   Enrollment Enrollment[]
   Booking    Booking[]
-}
+}type
 
 model Session {
   id        Int      @id @default(autoincrement())
