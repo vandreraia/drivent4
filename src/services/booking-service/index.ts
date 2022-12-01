@@ -17,17 +17,7 @@ async function checkTicket(userId: number) {
   }
 }
 
-async function getBooking(userId: number) {
-  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
-  if (!enrollment) {
-    throw notFoundError();
-  }
-  const booking = await bookingRepository.findBooking(userId);
-
-  return booking;
-}
-
-async function postBooking(userId: number, roomId: number) {
+async function checkRoom(roomId: number) {
   if (!roomId) {
     throw notFoundError();
   }
@@ -39,15 +29,45 @@ async function postBooking(userId: number, roomId: number) {
   if (countBooking.length >= room.capacity) {
     throw "forbidden";
   }
+}
+
+async function getBooking(userId: number) {
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (!enrollment) {
+    throw notFoundError();
+  }
+  const booking = await bookingRepository.findBooking(userId);
+
+  return booking;
+}
+
+async function postBooking(userId: number, roomId: number) {
+  await checkRoom(roomId);
   await checkTicket(userId);
   await bookingRepository.createBooking(userId, roomId);
   const booking = await bookingRepository.findBooking(userId);
 
   return { bookingId: booking.id };
 }
+
+async function putBooking(userId: number, roomId: number, bookingId: number) {
+  await checkRoom(roomId);
+  await checkTicket(userId);
+
+  let booking = await bookingRepository.findBooking(userId);
+  if (!booking) {
+    throw "forbidden";
+  }
+  await bookingRepository.updateBooking(roomId, booking.id);
+  booking = await bookingRepository.findBooking(userId);
+
+  return { bookingId: booking.id };
+}
+
 const bookingService = {
   getBooking,
-  postBooking
+  postBooking,
+  putBooking
 };
 
 export default bookingService;
